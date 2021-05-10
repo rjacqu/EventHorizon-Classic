@@ -1,2 +1,2 @@
-# EventHorizon_Classic
-EventHorizon_Classic ported from 2.4.3 version of EventHorizon
+# EventHorizon-Classic
+EventHorizon-Classic ported from 2.4.3 version of EventHorizon
