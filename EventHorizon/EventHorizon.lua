@@ -18,10 +18,6 @@ local EventHorizon = EventHorizon
 EventHorizon.db = EventHorizonDB
 
 
-local spelldurations = {
-	["Shadow Word: Pain"] = 24,
-	["Devouring Plague"] = 24
-}
 local eventhandler
 local spellbase = {}
 local mainframe
@@ -35,15 +31,13 @@ end
 
 local function UnitDebuffByName(unit, debuff)
 	for i = 1, 40 do
-		--local name, rank, icon, count, type, duration, timeLeft, isMine = UnitDebuff(unit, i)
 		local name, icon, count, debufftype, duration, expirationTime, isMine = UnitDebuff(unit, i)
 
 		if not name then break end
 
 		if name == debuff then
 			if duration >= 0 and (isMine == "player") then
-				local timeLeft = expirationTime-GetTime()
-				return name, icon, count, debufftype, duration, expirationTime, timeLeft
+				return name, icon, count, debufftype, duration, expirationTime
 			end
 		end
 	end
@@ -326,7 +320,7 @@ end
 
 function spellbase:UNIT_AURA(unitid)
 	if unitid~='target' then return end
-	local name, icon, count, debuffType, duration, expirationTime, timeLeft = UnitDebuffByName(unitid, self.spellname)
+	local name, icon, count, debuffType, duration, expirationTime = UnitDebuffByName(unitid, self.spellname)
 	local afflictedNow = name
 	local addnew
 	local now = GetTime()
@@ -449,12 +443,12 @@ function spellbase:UNIT_AURA_refreshable(unitid)
 				local s=self.castsuccess[guid]
 				if s then
 					local diff = math.abs(s-start)
-					print('diff', diff)
+					--print('diff', diff)
 					if diff>0.5 then
 						-- The current debuff was refreshed.
 						start = self.targetdebuff.start
 						refresh = true
-						print("refreshed")
+						--print("refreshed")
 					end
 				end
 			else
@@ -694,7 +688,7 @@ function EventHorizon:Initialize()
 		
 		self:NewSpell(8092, 'mb', {
 			cast = 1.5,
-			cooldown = 5.5,-- TODO check talents?
+			cooldown = 5.5,
 		})
 
 
