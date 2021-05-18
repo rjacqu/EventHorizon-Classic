@@ -589,6 +589,9 @@ function EventHorizon:NewSpell(spellid, abbrev, config)
 	spellframe:SetPoint("TOPLEFT", mainframe, "TOPLEFT", 0, -(mainframe.numframes-1) * height)
 	spellframe:SetWidth(width)
 	spellframe:SetHeight(height)
+	spellframe:SetBackdrop{bgFile = [[Interface\Addons\EventHorizon\Smooth]]}
+	spellframe:SetBackdropColor(1,1,1,.1)
+	
 
 	local icon = spellframe:CreateTexture(nil, "BORDER")
 	icon:SetTexture(tex)
@@ -658,7 +661,7 @@ function EventHorizon:Initialize()
 	EventHorizon.db = EventHorizonDB
 
 	-- Create the main and spell frames.
-	mainframe = CreateFrame("Frame",nil,UIParent)
+	mainframe = CreateFrame("Frame",nil,UIParent, "BackdropTemplate")
 	mainframe:SetWidth(width)
 	mainframe:SetHeight(1)
 	mainframe.numframes = 0
@@ -686,10 +689,10 @@ function EventHorizon:Initialize()
 			numhits = 3,
 		})
 		
-		self:NewSpell(8092, 'mb', {
-			cast = 1.5,
-			cooldown = 5.5,
-		})
+		-- self:NewSpell(8092, 'mb', {
+		-- 	cast = 1.5,
+		-- 	cooldown = 5.5,
+		-- })
 
 
 	elseif class == "WARLOCK" then 
@@ -697,11 +700,13 @@ function EventHorizon:Initialize()
 			channeled = 15,
 			numhits = 5,
 		})
-		self:NewSpell(686, 'sb', {
-			cast = 2.2,
+		self:NewSpell(18265, 'sl', {
+			debuff = 30,
+			dot = 3,
+			refreshable = true,
 		})
 		self:NewSpell(172, 'cor', {
-			debuff = 12,
+			debuff = 18,
 			dot = 3,
 			refreshable = true,
 		})
@@ -710,12 +715,15 @@ function EventHorizon:Initialize()
 			dot = 3,
 			cast = 2,
 		})
-		self:NewSpell(5782, 'fear', {
+		self:NewSpell(30108, 'ua', {
 			cast = 1.5,
-			debuff = 10,
+			dot = 3,
+			debuff = 18,
 		})
-		self:NewSpell(50511, 'cow', {
-			debuff = 120,
+		self:NewSpell(980, 'coa', {
+			dot = 3,
+			debuff = 24,
+			refreshable = true,
 		})
 	else
 		return
@@ -754,7 +762,42 @@ function EventHorizon:Initialize()
 	handle:SetScript("OnEnter",function(frame) frame.tex:SetColorTexture(1,1,1,1) end)
 	handle:SetScript("OnLeave",function(frame) frame.tex:SetColorTexture(1,1,1,0.1) end)
 	handle.tex:SetColorTexture(1,1,1,0.1)
-	-- Register slash commands. TODO
+	-- local function MyAddonCommands(msg, editbox)
+	--   local _, _, cmd, args = string.find(msg, "%s?(%w+)%s?(.*)")
+	--   cast = nil
+	--   cooldown = nil
+	--   debuff = nil
+	--   refreshable = false
+	--   dot = nil
+	--   channeled = nil
+	--   numhits = nil
+	--   if cmd == 'addspell' then
+	--   	spellid, abbrev, cast, cooldown, debuff, refreshable, dot, channeled, numhits  = strsplit(" ",args)
+	--     spellid = tonumber(spellid)
+	--     cooldown = tonumber(cooldown)
+	--     self:NewSpell(spellid, abbrev, {
+	--     	cooldown = cooldown,
+	--     	cast = cast,
+	--     	debuff = debuff,
+	--     	refreshable = refreshable,
+	--     	dot = dot,
+	--     	channeled = channeled,
+	--     	numhits = numhits
+	--     })
+	--     EventHorizon:Initialize()
+	--   elseif cmd == 'removespell' then
+	--     print('Goodbye, World!')
+	--   else
+	--     print("Usage: /ehc addspell spellid abbrev cast_time spell_cooldown dot_debuff dot_refreshable dot_tick channeled_time channeled_num_hits")
+	--     print("Example for Shadow Word: Death: /ehc addspell 32379 swd nil 12 nil nil nil nil nil")
+	--     print("Example for NE racial Starshards: /ehc addspell 25446 starshards nil 30 15 false 3 nil nil")
+	--     print("Example for Drain Life: /ehc addspell 689 dl nil nil nil nil nil 5 5")
+	--   end
+	-- end
+
+	-- SLASH_CMD1, SLASH_CMD2 = '/ehc', '/eh'
+
+	-- SlashCmdList["CMD"] = MyAddonCommands   -- add /hiw and /hellow to command list
 	
 end
 
@@ -764,5 +807,7 @@ do
 	frame:RegisterEvent("PLAYER_LOGIN")
 	function frame:PLAYER_LOGIN()
 		EventHorizon:Initialize()
+		print("EventHorizon Classic Initialized. In order to edit spells you will need to edit the addon manually for now.")
+		print("Slash commands for adding spells is being worked on."
 	end
 end
