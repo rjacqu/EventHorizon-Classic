@@ -689,10 +689,10 @@ function EventHorizon:Initialize()
 			numhits = 3,
 		})
 		
-		-- self:NewSpell(8092, 'mb', {
-		-- 	cast = 1.5,
-		-- 	cooldown = 5.5,
-		-- })
+		 self:NewSpell(8092, 'mb', {
+		 	cast = 1.5,
+		 	cooldown = 5.5,
+		 })
 
 
 	elseif class == "WARLOCK" then 
@@ -808,6 +808,6 @@ do
 	function frame:PLAYER_LOGIN()
 		EventHorizon:Initialize()
 		print("EventHorizon Classic Initialized. In order to edit spells you will need to edit the addon manually for now.")
-		print("Slash commands for adding spells is being worked on."
+		print("Slash commands for adding spells is being worked on.")
 	end
 end

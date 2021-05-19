@@ -1,6 +1,6 @@
-## Interface: 20400
-## Author: Tifi
-## Version: 0.1
+## Interface: 20501
+## Author: pbjtime
+## Version: 0.0.3
 ## Dependencies:
 ## OptDeps: 
 ## SavedVariables: EventHorizonDB
