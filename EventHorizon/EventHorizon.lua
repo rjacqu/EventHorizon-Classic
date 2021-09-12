@@ -43,16 +43,28 @@ local function UnitDebuffByName(unit, debuff)
 	end
 end
 
+local function UnitBuffByName(unit, buff)
+	for i = 1, 40 do
+		local name, icon, count, debufftype, duration, expirationTime, isMine = UnitBuff(unit, i)
+
+		if not name then break end
+
+		if name == buff then
+			return name, icon, count, debufftype, duration, expirationTime
+		end
+	end
+end
+
 function dump(o)
    if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. dump(v) .. ','
-      end
-      return s .. '} '
+	  local s = '{ '
+	  for k,v in pairs(o) do
+		 if type(k) ~= 'number' then k = '"'..k..'"' end
+		 s = s .. '['..k..'] = ' .. dump(v) .. ','
+	  end
+	  return s .. '} '
    else
-      return tostring(o)
+	  return tostring(o)
    end
 end
 
@@ -319,12 +331,27 @@ function spellbase:UNIT_SPELLCAST_SUCCEEDED(unitid, castGUID, spellID)
 end
 
 function spellbase:UNIT_AURA(unitid)
+	-- Handle buffs first
+	if unitid == 'player' then
+		local name, icon, count, debuffType, duration, expirationTime = UnitBuffByName(unitid, self.spellname)
+		if name then
+			if self.buff then
+				self:Remove(self.buff)
+			end
+			self.buff = self:AddSegment('casting', expirationTime-duration, expirationTime)
+		end
+	end
+	
+	-- Then ignore everything that's not our current target
 	if unitid~='target' then return end
+	
+	-- Handle target debuffs
 	local name, icon, count, debuffType, duration, expirationTime = UnitDebuffByName(unitid, self.spellname)
 	local afflictedNow = name
 	local addnew
 	local now = GetTime()
 	local start
+	
 	if afflictedNow then
 		start = expirationTime-duration
 		if self.debuff then
@@ -357,6 +384,7 @@ function spellbase:UNIT_AURA(unitid)
 			self.debuff = nil
 			self.nexttick = nil
 		end
+
 	end
 	if addnew then
 		if self.cast then
@@ -598,6 +626,7 @@ function EventHorizon:NewSpell(spellid, abbrev, config)
 	icon:SetPoint("TOPRIGHT", spellframe, "TOPLEFT")
 	icon:SetWidth(height)
 	icon:SetHeight(height)
+	icon:SetTexCoord(.08, .92, .08, .92)
 
 	local meta = getmetatable(spellframe)
 	if meta and meta.__index then
@@ -613,7 +642,9 @@ function EventHorizon:NewSpell(spellid, abbrev, config)
 	else
 		setmetatable(spellframe, {__index = spellbase})
 	end
+	
 	spellframe:RegisterEvent("UNIT_SPELLCAST_SENT")
+	
 	if config.channeled then
 		spellframe:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
 		spellframe:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
@@ -644,6 +675,10 @@ function EventHorizon:NewSpell(spellid, abbrev, config)
 		end
 	end
 	
+	if config.buff then
+		spellframe:RegisterEvent("UNIT_AURA")
+	end
+	
 	spellframe:SetScript("OnEvent", spellframe.OnEvent)
 	spellframe:SetScript("OnUpdate", spellframe.OnUpdate)
 end
@@ -666,7 +701,7 @@ function EventHorizon:Initialize()
 	mainframe:SetHeight(1)
 	mainframe.numframes = 0
 	if class == "PRIEST" then
-			self:NewSpell(34917, 'vt', {
+		self:NewSpell(34917, 'vt', {
 			cast = 1.5,
 			debuff = 15,
 			dot = 3,
@@ -677,11 +712,14 @@ function EventHorizon:Initialize()
 			dot = 3,
 			refreshable = true,
 		})
-
-		self:NewSpell(19280, 'dp', {
-			debuff = 24,
-			dot = 3,
-			cooldown = 180,
+		
+		 self:NewSpell(8092, 'mb', {
+		 	cast = 1.5,
+		 	cooldown = 6,
+		 })
+		 
+		self:NewSpell(32379, 'swd', {
+			cooldown = 12,
 		})
 
 		self:NewSpell(18807, 'mf', {
@@ -689,11 +727,22 @@ function EventHorizon:Initialize()
 			numhits = 3,
 		})
 		
-		 self:NewSpell(8092, 'mb', {
-		 	cast = 1.5,
-		 	cooldown = 5.5,
-		 })
-
+		self:NewSpell(34747, 'eye', {
+			buff = 10,
+		})
+		
+		self:NewSpell(32108, 'spellstrike', {
+			buff = 10,
+		})
+		
+		self:NewSpell(35163, 'icon', {
+			buff = 20,
+		})
+		
+		self:NewSpell(15286, 've', {
+			debuff = 60,
+			cooldown = 10,
+		})
 
 	elseif class == "WARLOCK" then 
 		self:NewSpell(27217, 'mf', {
@@ -728,6 +777,11 @@ function EventHorizon:Initialize()
 	else
 		return
 	end
+	
+	local mainBackground = mainframe:CreateTexture(nil, 'BORDER')
+	mainBackground:SetPoint("TOPLEFT", mainframe, "TOPLEFT", 0, 0)
+	mainBackground:SetPoint("BOTTOMRIGHT", mainframe, "BOTTOMRIGHT", 0, 0)
+	mainBackground:SetColorTexture(0,0,0,0.5)
 
 	local nowIndicator = mainframe:CreateTexture(nil, 'BORDER')
 	nowIndicator:SetPoint('BOTTOM',mainframe,'BOTTOM')
@@ -748,10 +802,8 @@ function EventHorizon:Initialize()
 	handle:SetScript("OnDragStop", function(frame) 
 		frame:StopMovingOrSizing() 
 		local a,b,c,d,e = frame:GetPoint(1)
-		if type(b)=='frame' then
-			b=b:GetName()
-		end
-		self.db.point = {a,b,c,d,e}
+
+		self.db.point = {a,d,e}
 	end)
 	if self.db.point then
 		handle:SetPoint(unpack(self.db.point))
