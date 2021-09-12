@@ -713,9 +713,17 @@ function EventHorizon:Initialize()
 			refreshable = true,
 		})
 		
+		if UnitRace("player") == "Undead" then
+			self:NewSpell(19280, 'dp', {
+				debuff = 24,
+				dot = 3,
+				cooldown = 180,
+			})
+		end
+		
 		 self:NewSpell(8092, 'mb', {
-		 	cast = 1.5,
-		 	cooldown = 6,
+			cast = 1.5,
+			cooldown = 6,
 		 })
 		 
 		self:NewSpell(32379, 'swd', {
